@@ -53,7 +53,7 @@ async function getResultsFromTable(table, depth = 0, seen = {}) {
   }))).flat();
 }
 
-async function rolltableRequesterMakeRoll(table) {
+async function rolltableRequesterMakeRoll(table, { blind } = { blind: true }) {
   const results = await getResultsFromTable(table);
   console.log(`[RTR] Got results:`, results);
   if (!results) { return; }
@@ -70,14 +70,27 @@ async function rolltableRequesterMakeRoll(table) {
     }))
   });
   const drawChatData = {
+      user: game.user.id,
       content: myHtml,
+      whisper: ChatMessage.getWhisperRecipients('GM'),
+      blind,
+      flavor: "",
   };
-  await socket.executeAsGM(WHISPER_FN, drawChatData);
+
+  if (blind) {
+    drawChatData.flavor = `${game.user.name} privately rolled some dice`;
+    ChatMessage.create(drawChatData, {});
+  } else {
+    drawChatData.blind = false;
+    drawChatData.whisper = [];
+    ChatMessage.create(drawChatData, {});
+  }
+  
 }
 
-async function makeRollById(tid) {
+async function makeRollById(tid, blind) {
   const table = game.tables.get(tid);
-  rolltableRequesterMakeRoll(table);
+  rolltableRequesterMakeRoll(table, { blind });
 }
 
 async function makeRollByName(tableName) {
@@ -90,6 +103,7 @@ async function requestRollById(tid, { blind, description } = { blind: false, des
     name: '???',
     thumbnail: 'icons/svg/d20-grey.svg',
     tid,
+    blind: true,
     system: game.system.id,
   };
   let table;
@@ -97,6 +111,7 @@ async function requestRollById(tid, { blind, description } = { blind: false, des
   if (!blind) {
     tmplData.name = table.name;
     tmplData.thumbnail = table.thumbnail;
+    tmplData.blind = false;
   }
   if (description) {
     tmplData.description = table.description;
@@ -143,10 +158,12 @@ Hooks.once('socketlib.ready', () => {
 
 Hooks.once('ready', async function() {
   $(document).on('click.rolltable-requester', '.rt-requester', function() {
-    console.log('RR: Handling button click');
+    console.log(`RR: Handling button click.`);
     const c = $(this);
+    const blind = c.data('blind');
     const tid = c.data('tableid');
-    makeRollById(tid);
+    
+    makeRollById(tid, blind);
   });
 });
 
