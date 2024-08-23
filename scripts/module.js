@@ -158,7 +158,7 @@ Hooks.on('getRollTableDirectoryEntryContext', async function(_, entries) {
   // Add entries at the top.
   entries.unshift({
     menuId,
-    name: game.i18n.localize('RolltableRequester.MenuMakeRoll'),
+    name: game.i18n.localize('RolltableRequester.MenuGMRoll'),
     icon: '<i class="fas fa-dice-d20"></i>',
     callback: (target) => makeRollById(target.data('document-id')),
   }, {
@@ -167,14 +167,19 @@ Hooks.on('getRollTableDirectoryEntryContext', async function(_, entries) {
     condition: game.user.isGM,
     callback: (target) => requestRollById(target.data('document-id')),
   }, {
+    name: game.i18n.localize('RolltableRequester.MenuRequestDescRoll'),
+    icon: '<i class="fas fa-question-circle"></i>',
+    condition: game.user.isGM,
+    callback: (target) => requestRollById(target.data('document-id'), { description: true }),
+  }, {
     name: game.i18n.localize('RolltableRequester.MenuRequestBlindRoll'),
     icon: '<i class="fas fa-eye-slash"></i>',
     condition: game.user.isGM,
     callback: (target) => requestRollById(target.data('document-id'), { blind: true }),
   }, {
-    name: game.i18n.localize('RolltableRequester.MenuRequestDescRoll'),
-    icon: '<i class="fas fa-book-sparkles"></i>',
+    name: game.i18n.localize('RolltableRequester.MenuRequestBlindDescRoll'),
+    icon: '<i class="fas fa-eye-slash"></i>',
     condition: game.user.isGM,
-    callback: (target) => requestRollById(target.data('document-id'), { description: true }),
+    callback: (target) => requestRollById(target.data('document-id'), { blind: true }, { description: true }),
   });
 });
